@@ -1,0 +1,24 @@
+.drawing-app {
+  padding: 20ppx;
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 900px;
+}
+.drawing-app h1 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.drawing-canvas {
+  border: 1px solid black;
+  display: block;
+  cursor: crosshair;
+  margin: 0 auto;
+}
