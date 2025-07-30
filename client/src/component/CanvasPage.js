@@ -11,24 +11,48 @@ const CanvasPage = () => {
     socketRef.current = new WebSocket("ws://localhost:3001");
 
     socketRef.current.onmessage = (event) => {
-      const { type, payload } = JSON.parse(event);
+      const { type, payload } = JSON.parse(event.data);
 
       if (type === "draw") {
         const { x0, y0, x1, y1 } = payload;
         drawLine(x0, y0, x1, y1);
+      }
+      if (type === "init") {
+        payload?.forEach(({ x0, y0, x1, y1 }) => {
+          drawLine(x0, y0, x1, y1);
+        });
+      }
+      if (type === "userCount") {
+        setUserCount(payload);
+      }
+    };
+    return () => {
+      if (
+        socketRef.current &&
+        socketRef.current.readyState === WebSocket.OPEN
+      ) {
+        socketRef.current.close();
       }
     };
   }, []);
 
   const drawLine = (x0, y0, x1, y1) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const pointer = canvas.getContext("2d");
-
+    if (!pointer) return;
     pointer.beginPath();
     pointer.moveTo(x0, y0);
     pointer.lineTo(x1, y1);
     pointer.stroke();
     pointer.closePath();
+
+    socketRef.current.send(
+      JSON.stringify({
+        type: "draw",
+        payload: { x0, y0, x1, y1 },
+      })
+    );
   };
   const handleMouseUp = (e) => {
     setIsDrawing(false);
@@ -52,7 +76,7 @@ const CanvasPage = () => {
   return (
     <div className="drawing-app">
       <h1>Real Time Canvas App</h1>
-      <p>Connected users : 1</p>
+      <p>Connected users : {userCount}</p>
       <div className="toolbar">
         <button>Add Rectangle</button>
       </div>
