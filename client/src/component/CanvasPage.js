@@ -6,6 +6,8 @@ const CanvasPage = () => {
   const socketRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [userCount, setUserCount] = useState(1);
+  const [color, setColor] = useState("black");
+  const [lineWidth, setLineWidth] = useState(1);
 
   useEffect(() => {
     socketRef.current = new WebSocket("ws://localhost:3001");
@@ -14,12 +16,12 @@ const CanvasPage = () => {
       const { type, payload } = JSON.parse(event.data);
 
       if (type === "draw") {
-        const { x0, y0, x1, y1 } = payload;
-        drawLine(x0, y0, x1, y1);
+        const { x0, y0, x1, y1, color, lineWidth } = payload;
+        drawLine(x0, y0, x1, y1, color, lineWidth);
       }
       if (type === "init") {
-        payload?.forEach(({ x0, y0, x1, y1 }) => {
-          drawLine(x0, y0, x1, y1);
+        payload?.forEach(({ x0, y0, x1, y1, color, lineWidth }) => {
+          drawLine(x0, y0, x1, y1, color, lineWidth);
         });
       }
       if (type === "userCount") {
@@ -36,7 +38,7 @@ const CanvasPage = () => {
     };
   }, []);
 
-  const drawLine = (x0, y0, x1, y1) => {
+  const drawLine = (x0, y0, x1, y1, color, lineWidth) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const pointer = canvas.getContext("2d");
@@ -44,16 +46,32 @@ const CanvasPage = () => {
     pointer.beginPath();
     pointer.moveTo(x0, y0);
     pointer.lineTo(x1, y1);
+    pointer.strokeStyle = color;
+    pointer.lineWidth = lineWidth;
     pointer.stroke();
     pointer.closePath();
 
     socketRef.current.send(
       JSON.stringify({
         type: "draw",
-        payload: { x0, y0, x1, y1 },
+        payload: { x0, y0, x1, y1, color, lineWidth },
       })
     );
   };
+
+  const drawRectangle = (x0, y0, width, height, color, lineWidth) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const pointer = canvas.getContext("2d");
+    if (!pointer) return;
+    pointer.beginPath();
+    pointer.rect(x0, y0, width, height);
+    pointer.strokeStyle = color;
+    pointer.lineWidth = lineWidth;
+    pointer.stroke();
+    pointer.closePath();
+  };
+
   const handleMouseUp = (e) => {
     setIsDrawing(false);
   };
@@ -78,7 +96,28 @@ const CanvasPage = () => {
       <h1>Real Time Canvas App</h1>
       <p>Connected users : {userCount}</p>
       <div className="toolbar">
-        <button>Add Rectangle</button>
+        <button onClick={() => drawRectangle(80, 80, 180, 200, "black", 2)}>
+          Add Rectangle
+        </button>
+        <label>
+          color :
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+          ></input>
+        </label>
+        <label>
+          Line Width :
+          <input
+            type="range"
+            min={0}
+            max={10}
+            value={lineWidth}
+            onChange={(e) => setLineWidth(e.target.value)}
+          ></input>
+        </label>
+        <button>Clear Canvas</button>
       </div>
       <canvas
         className="drawing-canvas"

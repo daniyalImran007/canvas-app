@@ -1,5 +1,10 @@
+require("dotenv").config();
+
 const WebSocket = require("ws");
-const server = new WebSocket.Server({ port: 3001 });
+
+const PORT = process.env.PORT || 3001;
+
+const server = new WebSocket.Server({ port: PORT });
 
 let clients = new Set();
 let drawHistory = [];
