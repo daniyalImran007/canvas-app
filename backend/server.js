@@ -7,6 +7,24 @@ let displayHistory = [];
 server.on("connection", (socket) => {
   clients.add(socket);
   console.log(`New client added. Total Client : ${clients.size}`);
+
+  socket.on("message", (data) => {
+    let message;
+    try {
+      message = JSON.parse(data);
+    } catch (error) {
+      console.log(error);
+    }
+    if (message.type === "draw") {
+      displayHistory.push(message.payload);
+      clients.send(
+        JSON.stringify({
+          type: "draw",
+          message: JSON.stringify(message.payload),
+        })
+      );
+    }
+  });
 });
 
 server.on("close", () => {
